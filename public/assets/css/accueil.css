@@ -1,0 +1,18 @@
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #3498db, #2ecc71);
+}
+
+.btn-rounded {
+    border-radius: 30px;
+    padding: 0.5rem 2rem;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #3498db;
+}

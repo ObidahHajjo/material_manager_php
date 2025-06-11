@@ -1,0 +1,5 @@
+/vendor/
+/config/Database.php
+/composer.lock
+/logs/app.log
+/.vscode
