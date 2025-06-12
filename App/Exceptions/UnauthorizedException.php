@@ -17,4 +17,8 @@ class UnauthorizedException extends Exception
 
         parent::__construct($message, $code);
     }
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
 }

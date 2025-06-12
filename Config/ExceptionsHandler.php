@@ -41,7 +41,7 @@ class ExceptionsHandler
         }
 
         self::log($e);
-        return;
+        die();
     }
 
 
@@ -86,6 +86,7 @@ class ExceptionsHandler
         $line = $e->getLine();
         $trace = $e->getTraceAsString();
         $debug = getenv('APP_DEBUG') === 'true';
+        $url = method_exists($e, 'getUrl') ? $e->getUrl() : null;
 
         require __DIR__ . "/../resources/views/errors/{$view}.php";
     }

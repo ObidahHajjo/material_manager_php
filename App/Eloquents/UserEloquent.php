@@ -26,7 +26,7 @@ class UserEloquent
     const FIND_BY_EMAIL_SQL = "SELECT * FROM users WHERE email = :email LIMIT 1";
     const FIND_BY_ID_SQL = "SELECT * FROM users WHERE id = :id LIMIT 1";
     const CREATE_SQL = "INSERT INTO users(username,email,password,role) VALUES(:username, :email, :password, :role)";
-    const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role";
+    const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role, last_login = :last_login ";
 
     /**
      * Get a User by his email from the db
@@ -106,6 +106,7 @@ class UserEloquent
             if (isset($data['password'])) $sql .= ", password = :password ";
             $sql .= "WHERE id = :id";
             $stmt = $this->db->prepare($sql);
+            $data['last_login'] = $data['last_login'] ? $data['last_login']->format('Y-m-d H:i:s') : null;
             $stmt->execute($data);
             $isValid = $stmt->rowCount() > 0;
             return UserFactory::create($data);
@@ -117,7 +118,7 @@ class UserEloquent
 
     public function createReset(array $data): bool
     {
-        $sql = "INSERT INTO password_resets(email, token, expire_at) VALUES(:email, :token, :expire_at);";
+        $sql = "INSERT INTO password_resets(email, token) VALUES(:email, :token);";
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute($data);
@@ -129,17 +130,17 @@ class UserEloquent
 
     public function getResetByToken(string $token): ?array
     {
-        $sql = "SELECT * FROM password_resets WHERE token = :token AND expire_at > :expire_at LIMIT 1;";
+        $sql = "SELECT * FROM password_resets WHERE token = :token AND expire_at > NOW() AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1;";
         try {
             $stmt = $this->db->prepare($sql);
             $expireAt =  date('Y-m-d H:i:s');
             $stmt->bindParam('token', $token, PDO::PARAM_STR);
-            $stmt->bindParam('expire_at', $expireAt, PDO::PARAM_STR);
             $stmt->execute();
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$data || empty($data)) return null;
             return $data;
         } catch (PDOException $e) {
+            file_put_contents(__DIR__ . "/../../logs/app.log", data: $e->getMessage());
             throw new PDOException($e->getMessage());
         }
     }

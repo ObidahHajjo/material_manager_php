@@ -25,4 +25,9 @@ class ValidationException extends Exception
     {
         return $this->errors;
     }
+
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
 }

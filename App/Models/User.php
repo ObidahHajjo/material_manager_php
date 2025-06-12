@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use DateTime;
+
 class User
 {
     private int $id;
     private string $username;
     private string $email;
     private ?string $password;
-    private string $role;
+    private ?string $role = null;
+
+    private ?DateTime $last_login;
 
     /**
      * Summary of __construct
@@ -20,6 +24,7 @@ class User
         $this->username = $data['username'];
         $this->email = $data['email'];
         $this->role = $data['role'];
+        $this->last_login = new DateTime($data['last_login']) ?: null;
     }
 
     // Getters
@@ -59,6 +64,15 @@ class User
         return $this->role;
     }
 
+    /**
+     * Get last login of the user
+     * @return DateTime|null
+     */
+    public function getLastLogin(): ?DateTime
+    {
+        return $this->last_login;
+    }
+
     // Setters
 
     /**
@@ -95,5 +109,14 @@ class User
     public function setPassword(string $password): void
     {
         $this->password = $password;
+    }
+
+    /**
+     * set last login of the user
+     * @return void
+     */
+    public function setLastLogin(?DateTime $lastLogin = null): void
+    {
+        $this->last_login = $lastLogin;
     }
 }

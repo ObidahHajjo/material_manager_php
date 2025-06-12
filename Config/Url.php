@@ -1,5 +1,5 @@
 <?php
 function base_url($path = '')
 {
-    return ($path ? '/' . ltrim($path, '/') : '');
+    return "http://localhost:8080" . ($path ? '/' . ltrim($path, '/') : '');
 }

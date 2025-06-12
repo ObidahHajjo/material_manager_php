@@ -1,25 +1,29 @@
-<div class="container">
-    <h2>Forgot Password</h2>
-    <p class="subtitle">Enter your email address and we'll send you a link to reset your password.</p>
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="card rounded-4 p-5" style="max-width: 500px; width: 100%;">
+        <h2 class="text-center text-primary fw-bold mb-2">Forgot Password</h2>
+        <p class="text-center text-muted mb-4">Enter your email address and we'll send you a link to reset your password.</p>
 
-    <div id="successMessage" class="alert alert-success" style="display:none;"></div>
-    <div id="errorMessage" class="alert alert-danger" style="display:none;"></div>
+        <div id="successMessage" class="alert alert-success d-none" role="alert"></div>
+        <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
 
-    <form id="resetForm">
-        <div class="form-group">
-            <label for="email" class="form-label">Email Address</label>
-            <input type="email" name="email" id="email" class="form-control" required placeholder="Enter your email address">
+        <form id="resetForm">
+            <div class="mb-4">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" name="email" id="email" class="form-control" required placeholder="Enter your email">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 fw-semibold" id="resetButton">
+                SEND RESET LINK
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="<?= base_url('login') ?>" class="text-decoration-none text-primary">&larr; Back to Login</a>
         </div>
-
-        <button type="submit" class="btn btn-primary" id="resetButton">
-            Send Reset Link
-        </button>
-    </form>
-
-    <div class="back-link">
-        <a href="/login"> &larr; Back to Login</a>
     </div>
 </div>
+
+
 
 <script>
     const form = document.getElementById('resetForm');
@@ -29,28 +33,31 @@
     const emailInput = document.getElementById('email');
 
     function showMessage(element, message, isSuccess = true) {
-        // Hide other message
-        const otherMessage = isSuccess ? errorMessage : successMessage;
-        otherMessage.style.display = 'none';
-        otherMessage.classList.remove('show');
+        const otherElement = isSuccess ? errorMessage : successMessage;
+        element = isSuccess ? successMessage : errorMessage;
+
+        // Hide the other message
+        otherElement.classList.remove('show');
+        otherElement.classList.add('d-none');
 
         // Show current message
         element.textContent = message;
-        element.style.display = 'block';
+        element.classList.remove('d-none');
 
-        // Trigger animation
+        // Trigger fade-in animation
         setTimeout(() => {
             element.classList.add('show');
         }, 10);
 
-        // Auto hide after 5 seconds
+        // Auto-hide after 5 seconds
         setTimeout(() => {
             element.classList.remove('show');
             setTimeout(() => {
-                element.style.display = 'none';
+                element.classList.add('d-none');
             }, 300);
         }, 5000);
     }
+
 
     $('#resetForm').on('submit', function(e) {
         e.preventDefault();
@@ -70,7 +77,7 @@
         setButtonLoading(true);
         $.ajax({
             type: 'POST',
-            url: '/forgot-password',
+            url: '<?= base_url('forgot-password') ?>',
             data: {
                 email
             },
@@ -79,15 +86,20 @@
                 if (response.success) {
                     showMessage(successMessage, `Reset link sent to ${email}. Please check your inbox and spam folder. You will be redirect to login page`, true);
                     setTimeout(() => {
-                        window.location.href = '/login';
+                        window.location.href = '<?= base_url('/login') ?>';
                     }, 5000);
                 } else {
-                    showMessage(errorMessage, response || 'An error occurred. Please try again.', false);
+                    showMessage(errorMessage, response.message || 'An error occurred. Please try again.', false);
                 }
             },
-            error: function(xhr, error) {
-                showMessage(errorMessage, error || 'An error occurred. Please try again.', false);
-                console.error(xhr.responseText);
+            error: function(xhr, status, error) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    const message = response.message || 'An unknown error occurred.';
+                    showMessage(errorMessage, message, false);
+                } catch (e) {
+                    showMessage(errorMessage, 'An error occurred. Please try again.', false);
+                }
             }
         });
         setButtonLoading(false);

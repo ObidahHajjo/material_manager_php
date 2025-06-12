@@ -14,6 +14,8 @@ class HomeController extends Controller
         $this->session->destroy();
         $this->view('HomeView', [
             'title' => 'Bienvenu',
+        ], [
+            'home'
         ]);
     }
 }

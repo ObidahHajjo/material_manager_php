@@ -27,7 +27,7 @@ class Auth
      */
     public function loginVerify(string $email, string $password): ?User
     {
-        $user = $this->userEloquent->findPraticienByEmail($email);
+        $user = $this->userEloquent->findByEmail($email);
         if ($user && password_verify($password, $user['password'])) {
 
             if (password_needs_rehash($user['password'], PASSWORD_DEFAULT)) {

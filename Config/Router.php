@@ -81,15 +81,21 @@ class Router
     {
         $action = str_replace('/', '\\', $action);
         list($controller, $controllerMethod) = explode('@', $action);
-        // $controllerClass = dirname(__DIR__) . "/app/Controllers/" . $controller;
         $controllerClass = "App\\Controllers\\" . $controller;
+
         if (!class_exists($controllerClass)) {
             http_response_code(500);
             throw new \Exception("Error: Controller class $controllerClass not found.");
         }
+
         $controllerInstance = new $controllerClass();
+
         if (method_exists($controllerInstance, $controllerMethod)) {
-            call_user_func_array([$controllerInstance, $controllerMethod], $params);
+            if (method_exists($controllerInstance, 'callAction')) {
+                return $controllerInstance->callAction($controllerMethod, $params);
+            } else {
+                return call_user_func_array([$controllerInstance, $controllerMethod], $params);
+            }
         } else {
             http_response_code(500);
             throw new \Exception("Error: Method $controllerMethod not found in $controllerClass.");

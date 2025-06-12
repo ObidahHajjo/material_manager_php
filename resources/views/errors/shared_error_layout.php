@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <?php if (isset($url)) : ?>
-        <meta http-equiv='refresh' content='5;url=/<?= $url ?>'>
+    <?php if (isset($url) && $url) : ?>
+        <meta http-equiv='refresh' content='8;url=<?= $url ?>'>
     <?php endif; ?>
     <title><?= $title ?? 'Error | Something went wrong' ?></title>
     <style>
@@ -49,17 +49,23 @@
         <div class="error-title"><?= $heading ?? 'An error occurred' ?></div>
         <div class="error-message">
             <?= htmlspecialchars($message) ?>
+            <?php if ($url) : ?>
+                <p style="color: red;">You will be redirect to <?= $url ?></p>
+            <?php endif; ?>
         </div>
 
-        <?php if ($debug ?? false): ?>
-            <div><strong>File:</strong> <?= htmlspecialchars($file) ?> (line <?= $line ?>)</div>
-            <br>
-            <div class="trace">
-                <pre><?= htmlspecialchars($trace) ?></pre>
-            </div>
-        <?php else: ?>
-            <p>Please contact support if the issue persists.</p>
-        <?php endif; ?>
+        <?php //if (true): 
+        ?>
+        <div><strong>File:</strong> <?= htmlspecialchars($file) ?> (line <?= $line ?>)</div>
+        <br>
+        <div class="trace">
+            <pre><?= htmlspecialchars($trace) ?></pre>
+        </div>
+        <?php //else: 
+        ?>
+        <!-- <p>Please contact support if the issue persists.</p> -->
+        <?php //endif; 
+        ?>
     </div>
 </body>
 

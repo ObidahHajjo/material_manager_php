@@ -39,10 +39,11 @@ class Controller
 
 
 
-    protected function view(string $view, $data = [])
+    protected function view(string $view, $data = [], $styleSheets = [])
     {
         try {
             extract($data);
+            if (!empty($styleSheets)) $styles = $styleSheets;
             require_once "../App/Views/Layouts/Header.php";
             if (isset($_SESSION['isPro'])) {
                 require_once "../App/Views/Layouts/Navbar.php";
