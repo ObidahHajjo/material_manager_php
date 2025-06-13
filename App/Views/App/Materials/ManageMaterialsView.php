@@ -95,6 +95,9 @@
     </div>
 </div>
 
+<!-- Add margin for fixed-top -->
+<div style="margin-top: 36.8rem;"></div>
+
 
 <script>
     const $form = $('#materialForm');

@@ -154,6 +154,7 @@ class ReservationEloquent
             $stmt->execute([$userId]);
             $reservations = [];
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (empty($data)) return [];
             $user = $this->userEloquent->findById($data[0]['user_id']);
             foreach ($data as $row) {
                 $row['user'] = $user;
@@ -211,7 +212,7 @@ class ReservationEloquent
     /**
      * Check for conflicts (overlapping reservations for same materials)
      */
-    public function hasConflict(string $startTime, string $endTime, array $materialIds): bool
+    public function hasConflict(?int $reservationId, string $startTime, string $endTime, array $materialIds): bool
     {
         if (empty($materialIds)) {
             return false;
@@ -240,8 +241,12 @@ class ReservationEloquent
                     $startTime,
                     $startTime,
                     $endTime
-                ]
+                ],
             );
+            if ($reservationId && $reservationId > 0 && $reservationId !== null) {
+                $query .= " AND r.id != ?";
+                $params = array_merge($params, [$reservationId]);
+            }
 
             $stmt = $this->db->prepare($query);
             $stmt->execute($params);

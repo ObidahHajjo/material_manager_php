@@ -27,6 +27,7 @@ class UserEloquent
     const FIND_BY_ID_SQL = "SELECT * FROM users WHERE id = :id LIMIT 1";
     const CREATE_SQL = "INSERT INTO users(username,email,password,role) VALUES(:username, :email, :password, :role)";
     const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role, last_login = :last_login, avatar = :avatar ";
+    const DELETE_SQL = "DELETE FROM users WHERE id = ?";
     const CREATE_RESET_SQL = "INSERT INTO password_resets(email, token) VALUES(:email, :token);";
     const GET_RESET_BY_TOKEN_SQL = "SELECT * FROM password_resets WHERE token = :token AND expire_at > NOW() AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1;";
     const DELETE_RESET_SQL = "DELETE FROM password_resets WHERE email = :email;";
@@ -103,6 +104,8 @@ class UserEloquent
             $stmt->execute($data);
             $id = $this->db->lastInsertId();
             $data['id'] = $id;
+            $data['last_login'] = null;
+            $data['avatar'] = null;
             return UserFactory::create($data);
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
@@ -142,9 +145,27 @@ class UserEloquent
             if (isset($data['password'])) $sql .= ", password = :password ";
             $sql .= "WHERE id = :id";
             $stmt = $this->db->prepare($sql);
-            $data['last_login'] = $data['last_login'] ? $data['last_login']->format('Y-m-d H:i:s') : null;
+            $data['last_login'] = isset($data['last_login']) ? $data['last_login']->format('Y-m-d H:i:s') : null;
+            $data['avatar'] = isset($data['avatar']) ? $data['avatar'] : null;
             $isValid = $stmt->execute($data);
             return $isValid ? UserFactory::create($data) : null;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a user
+     * @param int $id
+     * @return bool
+     * @throws PDOException
+     */
+    public function delete(int $id): bool
+    {
+        try {
+            $stmt = $this->db->prepare(self::DELETE_SQL);
+            $stmt->execute([$id]);
+            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }

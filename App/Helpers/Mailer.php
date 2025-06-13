@@ -12,7 +12,7 @@ class Mailer
     {
         $this->mail = new PHPMailer(true);
     }
-    public function send(string $email, string $subject, string $message, string $link): bool
+    public function send(string $email, string $subject, string $message, ?string $link = null): bool
     {
         $mail = $this->mail;
         try {

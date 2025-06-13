@@ -25,7 +25,6 @@
 
             <div class="navbar-nav">
                 <a href="/login" class="btn btn-login">Login</a>
-                <a href="/register" class="btn btn-register">Register</a>
             </div>
         </div>
     </div>
@@ -40,10 +39,6 @@
                 <p>Transform your inventory management with our comprehensive material tracking and management system. Streamline operations, reduce costs, and improve efficiency.</p>
 
                 <div class="hero-buttons">
-                    <a href="register.html" class="btn btn-hero btn-hero-primary">
-                        <i class="fas fa-rocket me-2"></i>
-                        Get Started
-                    </a>
                     <a href="#features" class="btn btn-hero btn-hero-secondary">
                         <i class="fas fa-info-circle me-2"></i>
                         Learn More
@@ -155,10 +150,6 @@
         <p>Join thousands of businesses already using Material Manager to optimize their inventory management.</p>
 
         <div class="hero-buttons">
-            <a href="register.html" class="btn btn-hero btn-hero-primary">
-                <i class="fas fa-user-plus me-2"></i>
-                Create Account
-            </a>
             <a href="login.html" class="btn btn-hero btn-hero-secondary">
                 <i class="fas fa-sign-in-alt me-2"></i>
                 Sign In

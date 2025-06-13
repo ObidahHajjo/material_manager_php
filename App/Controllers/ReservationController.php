@@ -86,7 +86,7 @@ class ReservationController extends Controller
             $request = new CreateReservationRequest();
             $data = $request->validated();
             if (!$data) throw new Exception("Fields are required !", 400);
-            if ($this->reservationEloquent->hasConflict($data['start_date'], $data['end_date'], $data['materials']))
+            if ($this->reservationEloquent->hasConflict(null, $data['start_date'], $data['end_date'], $data['materials']))
                 throw new Exception("Materials are already reserved at this time!");
             if (!$this->reservationEloquent->create([...$data, "user_id" => $user->getId()]))  throw new Exception("Error while creating a new reservation", 500);
             http_response_code(200);
@@ -104,7 +104,7 @@ class ReservationController extends Controller
             $request = new CreateReservationRequest();
             $data = $request->validated();
             if (!$data) throw new Exception("Fields are required !", 400);
-            if ($this->reservationEloquent->hasConflict($data['start_date'], $data['end_date'], $data['materials']))
+            if ($this->reservationEloquent->hasConflict($id, $data['start_date'], $data['end_date'], $data['materials']))
                 throw new Exception("Materials are already reserved at this time!");
             if (!$this->reservationEloquent->update([...$data, "id" => $id]))  throw new Exception("Error while updating a reservation", 500);
             http_response_code(200);
@@ -117,7 +117,7 @@ class ReservationController extends Controller
 
     public function delete(int $id)
     {
-        if (!$this->session->isset('user') || $this->session->get('user')->getRole() !== 'admin') throw new UnauthorizedException();
+        if (!$this->session->isset('user')) throw new UnauthorizedException();
         try {
             if (!$this->reservationEloquent->delete($id)) throw new Exception("Error while deleting a material", 500);
             http_response_code(200);

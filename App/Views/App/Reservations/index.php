@@ -65,6 +65,9 @@
     </div>
 </div>
 
+<!-- Add margin for fixed-top -->
+<div style="margin-top: 26rem;"></div>
+
 
 <!-- AJAX Script -->
 <script>

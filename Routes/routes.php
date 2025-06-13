@@ -34,4 +34,8 @@ Router::post('/reservations/create', 'ReservationController@create', 'protected'
 Router::post('/reservations/update/{id}', 'ReservationController@update', 'protected');
 Router::post('/reservations/delete/{id}', 'ReservationController@delete', 'protected');
 
+Router::post('/admin/users/create', 'UserController@create', 'protected');
+Router::post('/admin/users/update/{id}', 'UserController@update', 'protected');
+Router::post('/admin/users/delete/{id}', 'UserController@delete', 'protected');
+
 Router::dispatch();

@@ -3,10 +3,10 @@
 function config(string $key, $default = null)
 {
     $parts = explode('.', $key);
-    $file = __DIR__ . '/../../Config/' . $parts[0] . '.php';
+    $file = dirname(__DIR__, 2) . '/logs/' . $parts[0] . '.log';
 
     if (!file_exists($file)) {
-        file_put_contents(__DIR__ . '/../../logs/app.log', ["File not exists in ", $file, '           \n'], FILE_APPEND);
+        file_put_contents(dirname(__DIR__, 2) . '/logs/app.log', ["File not exists in ", $file, '           \n'], FILE_APPEND);
 
         return $default;
     }
