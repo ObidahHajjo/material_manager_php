@@ -13,6 +13,9 @@ COPY . /var/www/html/
 # Set working directory
 WORKDIR /var/www/html/public
 
+# Replace the default document root
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+
 # Optional: Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
 
