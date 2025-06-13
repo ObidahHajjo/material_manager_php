@@ -20,13 +20,13 @@
             <tbody>
                 <?php foreach ($users as $user): ?>
                     <tr>
-                        <td><?= $user['id'] ?></td>
-                        <td><?= htmlspecialchars($user['username']) ?></td>
-                        <td><?= htmlspecialchars($user['email']) ?></td>
-                        <td><?= ucfirst($user['role']) ?></td>
+                        <td><?= $user->getId() ?></td>
+                        <td><?= htmlspecialchars($user->getUserName()) ?></td>
+                        <td><?= htmlspecialchars($user->getEmail()) ?></td>
+                        <td><?= ucfirst($user->getRole()) ?></td>
                         <td>
-                            <span class="badge bg-<?= $user['active'] ? 'success' : 'secondary' ?>">
-                                <?= $user['active'] ? 'Active' : 'Inactive' ?>
+                            <span class="badge bg-<?= $user->getRole() == 'admin' ? 'success' : 'secondary' ?>">
+                                <?= $user->getRole() ? 'Active' : 'Inactive' ?>
                             </span>
                         </td>
                         <td>

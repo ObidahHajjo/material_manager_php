@@ -2,6 +2,8 @@
 
 namespace App\Requests;
 
+use DateTime;
+
 class Request
 {
     protected array $post;
@@ -136,6 +138,17 @@ class Request
                 break;
             case 'email':
                 $passed = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+            case 'date':
+                $dt = DateTime::createFromFormat('Y-m-d', $value);
+                $passed = $dt && $dt->format('Y-m-d') === $value;
+                break;
+            case 'datetime':
+                $dt1 = DateTime::createFromFormat('Y-m-d\TH:i', $value);
+                $dt2 = DateTime::createFromFormat('Y-m-d H:i:s', $value);
+                $passed =
+                    ($dt1 && $dt1->format('Y-m-d\TH:i') === $value) ||
+                    ($dt2 && $dt2->format('Y-m-d H:i:s') === $value);
+                break;
             default:
                 $passed = true;
                 break;
@@ -165,6 +178,10 @@ class Request
                     return (float) $value;
                 case 'timestamp':
                     return (int) $value;
+                case 'datetime':
+                    return DateTime::createFromFormat('Y-m-d\TH:i', $value)->format('Y-m-d H:i:s');
+                case 'date':
+                    return DateTime::createFromFormat('Y-m-d', $value)->format('Y-m-d');
             }
         }
         return $value;

@@ -23,7 +23,7 @@ class MaterialEloquent
     // Queries
     const FIND_BY_ID_SQL = "SELECT * FROM materials WHERE id = :id LIMIT 1";
     const CREATE_SQL = "INSERT INTO materials (name, category, quantity, status) VALUES (?, ?, ?, ?)";
-    const UPDATE_SQL = "UPDATE materials SET name = ?, category = ?, quantity = ?, status = ? WHERE id = ?";
+    const UPDATE_SQL = "UPDATE materials SET name = :name, category = :category, quantity = :quantity, status = :status WHERE id = :id";
     const DELETE_SQL = "DELETE FROM materials WHERE id = ?";
     const GET_ALL_SQL = "SELECT * FROM materials";
 
@@ -32,7 +32,7 @@ class MaterialEloquent
      * @return array|null
      * @throws PDOException
      */
-    public function getAll(): ?array
+    public function all(): ?array
     {
         $materials = [];
         try {
@@ -44,7 +44,6 @@ class MaterialEloquent
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }
-        return null;
     }
 
     /**
@@ -68,16 +67,14 @@ class MaterialEloquent
     /**
      * Create a new material
      * @param array $data
-     * @return Material|null
+     * @return bool
      * @throws PDOException
      */
-    public function create(array $data): ?Material
+    public function create(array $data): bool
     {
         try {
             $stmt = $this->db->prepare(self::CREATE_SQL);
-            $stmt->execute($data);
-            $id = $this->db->lastInsertId();
-            return $id ? MaterialFactory::create([...$data, 'id' => $id]) : null;
+            return $stmt->execute(array_values($data));
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }

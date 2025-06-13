@@ -2,54 +2,47 @@
 
 namespace App\Controllers;
 
+use App\Eloquents\MaterialEloquent;
 use App\Eloquents\ReservationEloquent;
+use App\Exceptions\UnauthorizedException;
+use App\Requests\Reservations\CreateReservationRequest;
+use Exception;
 
 class ReservationController extends Controller
 {
     private ReservationEloquent $reservationEloquent;
+    private MaterialEloquent $materialEloquent;
 
     public function __construct()
     {
-        $this->reservationEloquent = new ReservationEloquent();
         parent::__construct();
-    }
-
-    public function create()
-    {
-        $this->view('App/Reservations/CreateReservationView', [
-            'title' => 'Create Reservation',
-            'active' => 'newReservation'
-        ]);
-    }
-
-    public function show(int $id)
-    {
-        $this->reservationEloquent->findById($id);
-
-        $this->view('App/Reservations/ReservationView', [
-            'title' => 'My Reservations',
-            'active' => 'reseravtions',
-            'reservation' => $this->reservationEloquent->findById($id)
-        ]);
+        $this->reservationEloquent = new ReservationEloquent();
+        $this->materialEloquent = new MaterialEloquent();
     }
 
     public function index()
     {
-        $this->view('App/Reservations/index', [
-            'title' => 'My Reservations',
-            'active' => 'reseravtions',
-            'reservations' => $this->reservationEloquent->all()
-        ], [
-            'reservationTable'
-        ]);
+        if (!$this->session->isset('user')) throw new UnauthorizedException();
+        $user =  $this->session->get('user');
+        try {
+            $this->view('App/Reservations/index', [
+                'title' => 'My Reservations',
+                'active' => 'reseravtions',
+                'reservations' => $this->getReservations(),
+                'materials' => $this->materialEloquent->all()
+            ], [
+                'reservationTable'
+            ]);
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage(), $e->getCode() ?: 500);
+        }
     }
 
     public function search(string $searchTerm)
     {
-        // Load all reservations in memory
-        $reservations = $this->reservationEloquent->all(); // or wherever you load full list
+        if (!$this->session->isset('user')) throw new UnauthorizedException();
+        $reservations = $this->getReservations();
 
-        // Check for AJAX
         if ($_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
 
             $filteredReservations = $filteredReservations = array_filter($reservations, function ($reservation) use ($searchTerm) {
@@ -78,13 +71,74 @@ class ReservationController extends Controller
                 return false;
             });;
 
-            // Render only the table partial
             require __DIR__ . '/../Views/App/Reservations/ReservationTable.php';
             exit;
         }
 
-        // Fallback if accessed directly (optional)
         header('Location: /reservations');
+        exit;
+    }
+
+    public function create()
+    {
+        $user = $this->session->get('user');
+        try {
+            $request = new CreateReservationRequest();
+            $data = $request->validated();
+            if (!$data) throw new Exception("Fields are required !", 400);
+            if ($this->reservationEloquent->hasConflict($data['start_date'], $data['end_date'], $data['materials']))
+                throw new Exception("Materials are already reserved at this time!");
+            if (!$this->reservationEloquent->create([...$data, "user_id" => $user->getId()]))  throw new Exception("Error while creating a new reservation", 500);
+            http_response_code(200);
+            echo json_encode(['status' => 'success', 'message' => 'Reservation created']);
+        } catch (Exception $e) {
+            $this->jsonError($e);
+        }
+        exit();
+    }
+
+    public function update(int $id)
+    {
+        if (!$this->session->isset('user')) throw new UnauthorizedException();
+        try {
+            $request = new CreateReservationRequest();
+            $data = $request->validated();
+            if (!$data) throw new Exception("Fields are required !", 400);
+            if ($this->reservationEloquent->hasConflict($data['start_date'], $data['end_date'], $data['materials']))
+                throw new Exception("Materials are already reserved at this time!");
+            if (!$this->reservationEloquent->update([...$data, "id" => $id]))  throw new Exception("Error while updating a reservation", 500);
+            http_response_code(200);
+            echo json_encode(['status' => 'success', 'message' => 'Reservation updated']);
+        } catch (Exception $e) {
+            $this->jsonError($e);
+        }
+        exit();
+    }
+
+    public function delete(int $id)
+    {
+        if (!$this->session->isset('user') || $this->session->get('user')->getRole() !== 'admin') throw new UnauthorizedException();
+        try {
+            if (!$this->reservationEloquent->delete($id)) throw new Exception("Error while deleting a material", 500);
+            http_response_code(200);
+            echo json_encode(['status' => 'success', 'message' => 'Material deleted']);
+        } catch (Exception $e) {
+            $this->jsonError($e);
+        }
+        exit();
+    }
+
+    private function getReservations(): array
+    {
+        if (!$this->session->isset('user')) throw new UnauthorizedException();
+        $user =  $this->session->get('user');
+        return $user->getRole() === 'admin' ? $this->reservationEloquent->all() : $this->reservationEloquent->allByUserId($user->getId());
+    }
+
+    private function jsonError(Exception $e): void
+    {
+        http_response_code($e->getCode() ?: 500);
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         exit;
     }
 }

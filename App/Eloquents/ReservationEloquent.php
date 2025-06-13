@@ -38,8 +38,8 @@ class ReservationEloquent
                 VALUES (?, ?, ?)
             ");
             $stmt->execute([
-                $data['start_time'],
-                $data['end_time'],
+                $data['start_date'],
+                $data['end_date'],
                 $data['user_id']
             ]);
 
@@ -47,7 +47,7 @@ class ReservationEloquent
 
             if (!empty($data['materials'])) {
                 $stmtEquip = $this->db->prepare("
-                    INSERT INTO reservation_equipment (reservation_id, equipment_id)
+                    INSERT INTO reservation_material (reservation_id, material_id)
                     VALUES (?, ?)
                 ");
 
@@ -65,21 +65,106 @@ class ReservationEloquent
     }
 
     /**
+     * Update an exsting reservation
+     * @param array $data
+     * @return bool
+     * @throws Exception
+     */
+    public function update(array $data): bool
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $stmt = $this->db->prepare("
+            UPDATE reservations
+            SET start_date = ?, end_date = ?
+            WHERE id = ?
+        ");
+            $stmt->execute([
+                $data['start_date'],
+                $data['end_date'],
+                $data['id']
+            ]);
+
+            $deleteStmt = $this->db->prepare("DELETE FROM reservation_material WHERE reservation_id = ?");
+            $deleteStmt->execute([$data['id']]);
+
+            if (!empty($data['materials'])) {
+                $insertStmt = $this->db->prepare("
+                INSERT INTO reservation_material (reservation_id, material_id)
+                VALUES (?, ?)
+            ");
+                foreach ($data['materials'] as $materialId) {
+                    $insertStmt->execute([$data['id'], $materialId]);
+                }
+            }
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Delete a reservation by ID
+     * @param int $id
+     * @return bool
+     * @throws PDOException
+     */
+    public function delete(int $id): bool
+    {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM reservations WHERE id = ?");
+            return $stmt->execute([$id]);
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
+    }
+
+    /**
      * Get all reservations with their materials
-     * @return Reservation[]
+     * @return array
      */
     public function all(): array
     {
-        $stmt = $this->db->query("SELECT * FROM reservations");
-        $reservations = [];
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($data as $row) {
-            $row['user'] = $this->userEloquent->findById($row['user_id']);
-            $row['materials'] = $this->getMaterialsByReservationId(intval($row['id']));
-            $reservations[] = ReservationFactory::create($row);
+        try {
+            $stmt = $this->db->query("SELECT * FROM reservations");
+            $reservations = [];
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($data as $row) {
+                $row['user'] = $this->userEloquent->findById($row['user_id']);
+                $row['materials'] = $this->getMaterialsByReservationId(intval($row['id']));
+                $reservations[] = ReservationFactory::create($row);
+            }
+            return $reservations;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
         }
+    }
 
-        return $reservations;
+    /**
+     * Get all reservations by user id with their materials
+     * @return array
+     */
+    public function allByUserId(int $userId): array
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM reservations WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $reservations = [];
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $user = $this->userEloquent->findById($data[0]['user_id']);
+            foreach ($data as $row) {
+                $row['user'] = $user;
+                $row['materials'] = $this->getMaterialsByReservationId(intval($row['id']));
+                $reservations[] = ReservationFactory::create($row);
+            }
+
+            return $reservations;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     /**
@@ -87,16 +172,17 @@ class ReservationEloquent
      */
     public function findById(int $id): ?Reservation
     {
-        $stmt = $this->db->prepare("SELECT * FROM reservations WHERE id = ?");
-        $stmt->execute([$id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM reservations WHERE id = ?");
+            $stmt->execute([$id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($data) {
+            if (!$data) return null;
             $data['materials'] = $this->getMaterialsByReservationId($data['id']);
             return ReservationFactory::create($data);
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
         }
-
-        return null;
     }
 
     /**
@@ -104,36 +190,40 @@ class ReservationEloquent
      */
     private function getMaterialsByReservationId(int $reservationId): array
     {
-        $stmt = $this->db->prepare("
-            SELECT e.* FROM reservation_equipment re 
-            JOIN equipments e ON e.id = re.equipment_id
-            WHERE re.reservation_id = ?
+        try {
+            $stmt = $this->db->prepare("
+            SELECT m.* FROM reservation_material rm 
+            JOIN materials m ON m.id = rm.material_id
+            WHERE rm.reservation_id = ?
         ");
-        $stmt->execute([$reservationId]);
+            $stmt->execute([$reservationId]);
 
-        $materials = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $materials[] = MaterialFactory::create($row);
+            $materials = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $materials[] = MaterialFactory::create($row);
+            }
+            return $materials;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
         }
-        return $materials;
     }
 
     /**
      * Check for conflicts (overlapping reservations for same materials)
      */
-    public function hasConflict(DateTime $startTime, DateTime $endTime, array $materialIds): bool
+    public function hasConflict(string $startTime, string $endTime, array $materialIds): bool
     {
         if (empty($materialIds)) {
             return false;
         }
+        try {
+            $placeholders = str_repeat('?,', count($materialIds) - 1) . '?';
 
-        $placeholders = str_repeat('?,', count($materialIds) - 1) . '?';
-
-        $query = "
-            SELECT re.equipment_id
-            FROM reservation_equipment re
-            JOIN reservations r ON r.id = re.reservation_id
-            WHERE re.equipment_id IN ($placeholders)
+            $query = "
+            SELECT rm.material_id
+            FROM reservation_material rm
+            JOIN reservations r ON r.id = rm.reservation_id
+            WHERE rm.material_id IN ($placeholders)
               AND (
                     (r.start_date < ? AND r.end_date > ?) OR
                     (r.start_date < ? AND r.end_date > ?) OR
@@ -141,21 +231,24 @@ class ReservationEloquent
               )
         ";
 
-        $params = array_merge(
-            $materialIds,
-            [
-                $endTime->format('Y-m-d H:i:s'),
-                $endTime->format('Y-m-d H:i:s'),
-                $startTime->format('Y-m-d H:i:s'),
-                $startTime->format('Y-m-d H:i:s'),
-                $startTime->format('Y-m-d H:i:s'),
-                $endTime->format('Y-m-d H:i:s')
-            ]
-        );
+            $params = array_merge(
+                $materialIds,
+                [
+                    $endTime,
+                    $endTime,
+                    $startTime,
+                    $startTime,
+                    $startTime,
+                    $endTime
+                ]
+            );
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute($params);
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
 
-        return $stmt->fetchColumn() !== false;
+            return $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 }

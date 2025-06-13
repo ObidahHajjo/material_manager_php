@@ -32,8 +32,8 @@
                             <td>
                                 <div class="user-info d-flex align-items-center gap-2">
                                     <div class="user-avatar">
-                                        <?php if ($reservation->getUser()->getAvatar() && file_exists("/public" . $reservation->getUser()->getAvatar())): ?>
-                                            <img src="<?= $reservation->getUser()->getAvatar() ?>" alt="User Avatar">
+                                        <?php if ($reservation->getUser()->getAvatar() && file_exists($_SERVER['DOCUMENT_ROOT'] . "/assets/avatars/" . $reservation->getUser()->getAvatar())): ?>
+                                            <img src="assets/avatars/<?= $reservation->getUser()->getAvatar() ?>" alt="User Avatar">
                                         <?php else: ?>
                                             <?= substr($reservation->getUser()->getUserName(), 0, 2) ?>
                                         <?php endif; ?>
@@ -70,28 +70,19 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="/reservations/view?id=<?= $reservation->getId() ?>" class="btn btn-view" title="View Details">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                        View
-                                    </a>
-                                    <a href="/reservations/edit?id=<?= $reservation->getId() ?>" class="btn btn-edit" title="Edit Reservation">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                            <path d="m18.5 2.5-8 8v4h4l8-8a2 2 0 0 0 0-3L20 1" />
-                                        </svg>
+                                    <!-- For edit -->
+                                    <button class="btn btn-sm btn-outline-warning"
+                                        onclick='openReservationModal(<?= json_encode([
+                                                                            "id" => $reservation->getId(),
+                                                                            "start_date" => $reservation->getStartDate()->format("Y-m-d\TH:i"),
+                                                                            "end_date" => $reservation->getEndDate()->format("Y-m-d\TH:i"),
+                                                                            "materials" => $reservation->getMaterialIds() // should be an array of IDs
+                                                                        ]) ?>)'>
                                         Edit
-                                    </a>
-                                    <a href="/reservations/delete?id=<?= $reservation->getId() ?>" class="btn btn-delete" title="Delete Reservation"
-                                        onclick="return confirm('Are you sure you want to delete this reservation?')">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="3,6 5,6 21,6" />
-                                            <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2" />
-                                        </svg>
-                                        Delete
-                                    </a>
+                                    </button>
+                                    <form action="/reservations/delete/<?= $reservation->getId() ?>" method="POST" class="d-inline">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial(<?= $reservation->getId() ?>); return false;">Delete</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

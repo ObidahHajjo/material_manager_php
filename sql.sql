@@ -4,11 +4,12 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'enseignant') NOT NULL,
+    avatar VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login DATETIME NULL
 );
 
-CREATE TABLE equipments (
+CREATE TABLE materials (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     category VARCHAR(50),
@@ -25,12 +26,12 @@ CREATE TABLE reservations (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-CREATE TABLE reservation_equipment (
+CREATE TABLE reservation_material (
     reservation_id INT NOT NULL,
-    equipment_id INT NOT NULL,
-    PRIMARY KEY (reservation_id, equipment_id),
+    material_id INT NOT NULL,
+    PRIMARY KEY (reservation_id, material_id),
     FOREIGN KEY (reservation_id) REFERENCES reservations (id) ON DELETE CASCADE,
-    FOREIGN KEY (equipment_id) REFERENCES equipments (id) ON DELETE CASCADE
+    FOREIGN KEY (material_id) REFERENCES materials (id) ON DELETE CASCADE
 );
 
 CREATE TABLE password_resets (

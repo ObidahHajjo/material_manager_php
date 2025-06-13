@@ -69,6 +69,7 @@ class AuthController extends Controller
                 "id" => $user->getId(),
                 "role" => $user->getRole(),
                 "last_login" => new DateTime(),
+                "avatar" => $user->getAvatar()
             ]);
             if (!$user) throw new Exception("Error while updating the user", 500);
             http_response_code(200);

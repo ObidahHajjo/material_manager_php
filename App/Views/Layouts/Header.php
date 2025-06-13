@@ -16,7 +16,6 @@
     <link rel="styleSheet" href="<?= base_url('assets/css/NavBar.css') ?>" />
     <script src="<?= base_url("assets/js/main.js") ?>">
     </script>
-    <link href="<?= base_url("assets/css/shared.css") ?>" rel="stylesheet" />
     <link href="<?= base_url("assets/css/main.css") ?>" rel="stylesheet" />
     <?php if (isset($styles) && !empty($styles) && is_array($styles)) : ?>
         <?php foreach ($styles as $styleSheet) : ?>

@@ -26,14 +26,8 @@ $user = Session::get('user');
         </li>
 
         <li class="nav-item">
-          <a href="<?= base_url('reservations/create') ?>" class="btn btn-outline-success rounded-pill px-3 <?= $active && $active === 'newReservation' ? 'active' : '' ?>">
-            <i class="fas fa-calendar-plus me-1"></i> New Reservation
-          </a>
-        </li>
-
-        <li class="nav-item">
           <a href="<?= base_url('reservations') ?>" class="btn btn-outline-primary rounded-pill px-3 <?= $active && $active === 'reseravtions' ? 'active' : '' ?>">
-            <i class="fas fa-list me-1"></i> My Reservations
+            <i class="fas fa-list me-1"></i> <?= $user->getRole() == 'admin' ? 'All Reservations' : 'My Reservations' ?>
           </a>
         </li>
 

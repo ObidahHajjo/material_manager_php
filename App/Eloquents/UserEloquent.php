@@ -21,14 +21,35 @@ class UserEloquent
     }
 
     // SQL Queries
+    const FIND_All_SQL = "SELECT * FROM users";
     const UPDATE_PASSWORD_ALGORYTHME_SQL = "UPDATE users SET password = :password WHERE id = :id";
     const FIND_BY_EMAIL_SQL = "SELECT * FROM users WHERE email = :email LIMIT 1";
     const FIND_BY_ID_SQL = "SELECT * FROM users WHERE id = :id LIMIT 1";
     const CREATE_SQL = "INSERT INTO users(username,email,password,role) VALUES(:username, :email, :password, :role)";
-    const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role, last_login = :last_login ";
+    const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role, last_login = :last_login, avatar = :avatar ";
     const CREATE_RESET_SQL = "INSERT INTO password_resets(email, token) VALUES(:email, :token);";
     const GET_RESET_BY_TOKEN_SQL = "SELECT * FROM password_resets WHERE token = :token AND expire_at > NOW() AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1;";
     const DELETE_RESET_SQL = "DELETE FROM password_resets WHERE email = :email;";
+
+
+    /**
+     * Get all users
+     * @return array
+     * @throws PDOException
+     */
+    public function all()
+    {
+        try {
+            $stmt = $this->db->query(self::FIND_All_SQL);
+            $users =  $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($users as $user) {
+                $data[] = UserFactory::create($user);
+            }
+            return $data;
+        } catch (PDOException $e) {
+            throw new PDOException();
+        }
+    }
 
     /**
      * Get a User by his email from the db

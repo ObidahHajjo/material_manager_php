@@ -46,6 +46,14 @@ class Reservation
         return $this->materials;
     }
 
+    public function getMaterialIds(): array
+    {
+        foreach ($this->materials as $material) {
+            $materialsIds[] = $material->getId();
+        }
+        return $materialsIds;
+    }
+
     public function addMaterial(Material $material): void
     {
         $this->materials[] = $material;

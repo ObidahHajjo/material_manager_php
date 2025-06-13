@@ -25,7 +25,7 @@ class User
         $this->username = $data['username'];
         $this->email = $data['email'];
         $this->role = $data['role'];
-        $this->last_login = new DateTime($data['last_login']) ?: null;
+        $this->last_login = $data['last_login'] ? new DateTime($data['last_login']) : null;
         $this->avatar = $data['avatar'] ?: null;
     }
 

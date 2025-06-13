@@ -10,3 +10,4 @@ require_once __DIR__ . '/../Config/Session.php';
 require_once __DIR__ . '/../Config/Router.php';
 require_once __DIR__ . '/../Config/Url.php';
 require_once __DIR__ . '/../Routes/routes.php';
+define('BASE_BATH', __DIR__);
