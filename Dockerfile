@@ -11,7 +11,7 @@ RUN a2enmod rewrite
 COPY . /var/www/html/
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /var/www/html/public
 
 # Optional: Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
