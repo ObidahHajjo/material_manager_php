@@ -1,5 +1,5 @@
 <div class="container mt-5">
-    <h2 class="mb-4 text-primary">Reserve Equipment</h2>
+    <h2 class="mb-4 text-white">Reserve Equipment</h2>
 
     <form method="post" action="/reservations/store" class="card p-4 shadow-sm rounded-4">
         <div class="mb-3">

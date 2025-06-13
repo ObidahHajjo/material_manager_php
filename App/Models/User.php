@@ -13,6 +13,7 @@ class User
     private ?string $role = null;
 
     private ?DateTime $last_login;
+    private ?string $avatar = null;
 
     /**
      * Summary of __construct
@@ -25,6 +26,7 @@ class User
         $this->email = $data['email'];
         $this->role = $data['role'];
         $this->last_login = new DateTime($data['last_login']) ?: null;
+        $this->avatar = $data['avatar'] ?: null;
     }
 
     // Getters
@@ -73,6 +75,15 @@ class User
         return $this->last_login;
     }
 
+    /**
+     * Get avatar of the user
+     * @return string|null
+     */
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
     // Setters
 
     /**
@@ -118,5 +129,23 @@ class User
     public function setLastLogin(?DateTime $lastLogin = null): void
     {
         $this->last_login = $lastLogin;
+    }
+
+    /**
+     * Set the role of the user
+     * @param string $role
+     */
+    public function setRole(string $role): void
+    {
+        $this->role = $role;
+    }
+
+    /**
+     * Set the avatar of the user
+     * @param string $avatar
+     */
+    public function setAvatar(?string $avatar): void
+    {
+        $this->avatar = $avatar;
     }
 }

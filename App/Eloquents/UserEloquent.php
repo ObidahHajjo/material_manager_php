@@ -5,7 +5,6 @@ namespace App\Eloquents;
 use App\Factory\UserFactory;
 use PDO;
 use Config\Database;
-use App\Models\Praticien;
 use App\Models\User;
 use PDOException;
 
@@ -27,77 +26,93 @@ class UserEloquent
     const FIND_BY_ID_SQL = "SELECT * FROM users WHERE id = :id LIMIT 1";
     const CREATE_SQL = "INSERT INTO users(username,email,password,role) VALUES(:username, :email, :password, :role)";
     const UPDATE_SQL = "UPDATE users SET username = :username, email = :email, role = :role, last_login = :last_login ";
+    const CREATE_RESET_SQL = "INSERT INTO password_resets(email, token) VALUES(:email, :token);";
+    const GET_RESET_BY_TOKEN_SQL = "SELECT * FROM password_resets WHERE token = :token AND expire_at > NOW() AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1;";
+    const DELETE_RESET_SQL = "DELETE FROM password_resets WHERE email = :email;";
 
     /**
      * Get a User by his email from the db
      * @param string $email
      * @return array|null
+     * @throws PDOException
      */
     public function findByEmail(string $email): ?array
     {
-        $stmt = $this->db->prepare(self::FIND_BY_EMAIL_SQL);
-
-        $stmt->execute([':email' => $email]);
-
-        $praticien = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$praticien) return null;
-        return $praticien;
+        try {
+            $stmt = $this->db->prepare(self::FIND_BY_EMAIL_SQL);
+            $stmt->execute([':email' => $email]);
+            $praticien = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $praticien ?: null;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     /**
      * Get a user by his id
      * @param int $id
      * @return User|null
+     * @throws PDOException
      */
     public function findById(int $id): ?User
     {
-        $stmt = $this->db->prepare(self::FIND_BY_ID_SQL);
-        $stmt->execute([
-            ':id' => $id,
-        ]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user) return null;
-        return UserFactory::create($user);
+        try {
+            $stmt = $this->db->prepare(self::FIND_BY_ID_SQL);
+            $stmt->execute([
+                ':id' => $id,
+            ]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user ? UserFactory::create($user) : null;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     /**
      * Create a new user
      * @param array $data
      * @return \App\Models\User
+     * @throws PDOException
      */
     public function create(array $data): ?User
     {
-        $password = $data['password'];
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $data['password'] = $hashedPassword;
-        $stmt = $this->db->prepare(self::CREATE_SQL);
-        $stmt->execute($data);
-        $id = $this->db->lastInsertId();
-        $data['id'] = $id;
-        return UserFactory::create($data);
+        try {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $stmt = $this->db->prepare(self::CREATE_SQL);
+            $stmt->execute($data);
+            $id = $this->db->lastInsertId();
+            $data['id'] = $id;
+            return UserFactory::create($data);
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     /**
      * Update practitioner password algorythme
      * @param string $newHashedPassword
-     * @param int $idPraticien
+     * @param int $idUser
      * @return bool
+     * @throws PDOException
      */
     public function updatePasswordAlgorythme(string $newHashedPassword, int $idUser): bool
     {
-        $stmt = $this->db->prepare(self::UPDATE_PASSWORD_ALGORYTHME_SQL);
-
-        return $stmt->execute([
-            ':password' => $newHashedPassword,
-            ':id' => $idUser,
-        ]);
+        try {
+            $stmt = $this->db->prepare(self::UPDATE_PASSWORD_ALGORYTHME_SQL);
+            return $stmt->execute([
+                ':password' => $newHashedPassword,
+                ':id' => $idUser,
+            ]);
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
     }
 
     /**
      * Update a practitioner fields
      * @param array $data
      * @return User|null
+     * @throws PDOException
      */
     public function update(array $data): ?User
     {
@@ -107,20 +122,24 @@ class UserEloquent
             $sql .= "WHERE id = :id";
             $stmt = $this->db->prepare($sql);
             $data['last_login'] = $data['last_login'] ? $data['last_login']->format('Y-m-d H:i:s') : null;
-            $stmt->execute($data);
-            $isValid = $stmt->rowCount() > 0;
-            return UserFactory::create($data);
-        } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            $isValid = $stmt->execute($data);
+            return $isValid ? UserFactory::create($data) : null;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
         }
     }
 
 
+    /**
+     * Create a new password reset token
+     * @param array $data
+     * @return bool
+     * @throws PDOException
+     */
     public function createReset(array $data): bool
     {
-        $sql = "INSERT INTO password_resets(email, token) VALUES(:email, :token);";
         try {
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare(self::CREATE_RESET_SQL);
             $stmt->execute($data);
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
@@ -128,30 +147,35 @@ class UserEloquent
         }
     }
 
+    /**
+     * Get a password reset by token
+     * @param string $token
+     * @return array|null
+     * @throws PDOException
+     */
     public function getResetByToken(string $token): ?array
     {
-        $sql = "SELECT * FROM password_resets WHERE token = :token AND expire_at > NOW() AND created_at > NOW() - INTERVAL 1 HOUR LIMIT 1;";
         try {
-            $stmt = $this->db->prepare($sql);
-            $expireAt =  date('Y-m-d H:i:s');
-            $stmt->bindParam('token', $token, PDO::PARAM_STR);
-            $stmt->execute();
+            $stmt = $this->db->prepare(self::GET_RESET_BY_TOKEN_SQL);
+            $stmt->execute(["token" => $token]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$data || empty($data)) return null;
-            return $data;
+            return $data ? $data : null;
         } catch (PDOException $e) {
-            file_put_contents(__DIR__ . "/../../logs/app.log", data: $e->getMessage());
             throw new PDOException($e->getMessage());
         }
     }
 
+    /**
+     * Delete a password reset by user email
+     * @param string $email
+     * @return bool
+     * @throws PDOException
+     */
     public function deleteReset(string $email): bool
     {
-        $sql = "DELETE FROM password_resets WHERE email = :email;";
         try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam('email', $email);
-            $stmt->execute();
+            $stmt = $this->db->prepare(self::DELETE_RESET_SQL);
+            $stmt->execute(['email' => $email]);
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());

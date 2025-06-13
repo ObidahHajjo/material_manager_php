@@ -7,7 +7,7 @@ $user = Session::get('user');
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top border-bottom">
   <div class="container">
-    <a class="navbar-brand fw-bold text-gradient fs-4" href="<?= base_url('dashboard'); ?>">
+    <a class="navbar-brand fw-bold text-gradient fs-4 me-5" href="<?= base_url('dashboard'); ?>">
       <i class="fas fa-boxes-stacked me-2"></i>Material's Manager
     </a>
 
