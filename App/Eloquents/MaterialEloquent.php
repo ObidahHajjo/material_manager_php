@@ -21,11 +21,12 @@ class MaterialEloquent
     }
 
     // Queries
-    const FIND_BY_ID_SQL = "SELECT * FROM materials WHERE id = :id LIMIT 1";
-    const CREATE_SQL = "INSERT INTO materials (name, category, quantity, status) VALUES (?, ?, ?, ?)";
-    const UPDATE_SQL = "UPDATE materials SET name = :name, category = :category, quantity = :quantity, status = :status WHERE id = :id";
-    const DELETE_SQL = "DELETE FROM materials WHERE id = ?";
+    const FIND_BY_ID_SQL = "SELECT * FROM materials WHERE id = $1 LIMIT 1";
+    const CREATE_SQL = "INSERT INTO materials (name, category, quantity, status) VALUES ($1, $2, $3, $4)";
+    const UPDATE_SQL = "UPDATE materials SET name = $1, category = $2, quantity = $3, status = $4 WHERE id = $5";
+    const DELETE_SQL = "DELETE FROM materials WHERE id = $1";
     const GET_ALL_SQL = "SELECT * FROM materials";
+
 
     /**
      * Get all materials
@@ -56,7 +57,7 @@ class MaterialEloquent
     {
         try {
             $stmt = $this->db->prepare(self::FIND_BY_ID_SQL);
-            $stmt->execute(["id" => $id]);
+            $stmt->execute([$id]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             return $data ? MaterialFactory::create($data) : null;
         } catch (PDOException $e) {
@@ -74,7 +75,12 @@ class MaterialEloquent
     {
         try {
             $stmt = $this->db->prepare(self::CREATE_SQL);
-            return $stmt->execute(array_values($data));
+            return $stmt->execute([
+                $data['name'],
+                $data['category'],
+                $data['quantity'],
+                $data['status']
+            ]);
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }
@@ -90,7 +96,13 @@ class MaterialEloquent
     {
         try {
             $stmt = $this->db->prepare(self::UPDATE_SQL);
-            return $stmt->execute($data);
+            return $stmt->execute([
+                $data['name'],
+                $data['category'],
+                $data['quantity'],
+                $data['status'],
+                $data['id']
+            ]);
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage());
         }

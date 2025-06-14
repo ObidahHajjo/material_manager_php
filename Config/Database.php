@@ -16,8 +16,18 @@ class Database
     private function __construct()
     {
         try {
-            $this->pdo = new PDO("mysql:host=localhost;port=3306;dbname=material_manager", "root", "secret");
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $dsn = sprintf(
+                "%s:host=%s;port=%s;dbname=%s",
+                $_ENV['DB_CONNECTION'] ?? 'pgsql',
+                $_ENV['DB_HOST'],
+                $_ENV['DB_PORT'],
+                $_ENV['DB_DATABASE']
+            );
+            $this->pdo = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+            // $this->pdo = new PDO("mysql:host=localhost;port=3306;dbname=material_manager", "root", "secret");
         } catch (PDOException $e) {
             die("Erreur de connexion à la base de donnée: " . $e->getMessage());
         }
