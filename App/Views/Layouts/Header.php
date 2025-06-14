@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <link rel="styleSheet" href="<?= base_url('assets/css/NavBar.css') ?>" />
+    <link rel="styleSheet" href="<?= base_url('assets/css/navBar.css') ?>" />
     <script src="<?= base_url("assets/js/main.js") ?>">
     </script>
     <link href="<?= base_url("assets/css/main.css") ?>" rel="stylesheet" />
